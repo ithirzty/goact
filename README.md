@@ -5,12 +5,12 @@ Goact is a better way of pushing html to the client.
 
 Execute the binary inside your project folder.
 Linux
-```sh
+```bash
 ./goact
 ```
 Windows
-```sh
-.\\goact.exe
+```cmd
+.\goact.exe
 ```
 ### The go compiler needs to be installed.
 
