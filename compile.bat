@@ -1,0 +1,1 @@
+go build -o "C:/Windows/goact.exe" .
