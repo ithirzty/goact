@@ -67,7 +67,9 @@ func handleFile(content string) string {
 
 		//need to escape following char
 		if c == '\\' {
-			memory = append(memory, c)
+			if isString {
+				memory = append(memory, c)
+			}
 			isEscaped = true
 			continue
 		}

@@ -69,3 +69,13 @@ Where not put in `"`, key and values can be go variables.
 element = "some text"+someVariable
 ```
 Will set the content of an element to the quoted text or the value of the passed variable.
+> Can I use functions?
+__Yes but you will need to escape the closing parenthesis.__
+##### As such:
+```golang
+i++
+echo (
+    p = "Number of visitors: "
+        span{"color":"red"} = fmt.Sprint(i\)
+)
+```
