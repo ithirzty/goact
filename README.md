@@ -36,7 +36,6 @@ var i int = 0
 func server(w http.ResponseWriter, r *http.Request) {
 
 i++
-ti := strconv.Itoa(i)
 
 echo(
     html
@@ -45,7 +44,7 @@ echo(
         div#content
             h1 = "It works!"
         footer
-            p{"style":"color:red"} = "Visitors: "+ti
+            p{"style":"color:red"} = "Visitors: "+strconv.Itoa(i)
 )
 }
 ```
