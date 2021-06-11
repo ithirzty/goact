@@ -51,7 +51,7 @@ func main() {
 
 func handleFile(content string) string {
 	isString := false
-	isCode := false
+	isCode := 0
 	isEscaped := false
 	memory := []rune{}
 	tokens := []token{}
@@ -75,9 +75,20 @@ func handleFile(content string) string {
 		}
 
 		//current token is html
-		if isCode {
-			if c == ')' {
-				isCode = false
+		if isCode > 0 {
+			if c == '"' {
+				if isString {
+					isString = false
+				} else {
+					isString = true
+				}
+			}
+			if c == '(' && !isString {
+				isCode++
+			} else if c == ')' && !isString {
+				isCode--
+			}
+			if isCode == 0 {
 				tokens = append(tokens, token{Type: HTML, Content: string(memory)})
 				memory = []rune{}
 				continue
@@ -88,7 +99,7 @@ func handleFile(content string) string {
 
 		//current token is not yet html
 		if c == '(' && strings.HasSuffix(strings.TrimSpace(string(memory)), "echo") {
-			isCode = true
+			isCode = 1
 			code := " " + strings.TrimSpace(string(memory))
 			code = code[:len(code)-4]
 			tokens = append(tokens, token{Type: CODE, Content: code})

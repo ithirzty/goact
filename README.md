@@ -76,6 +76,6 @@ __Yes but you will need to escape the closing parenthesis.__
 i++
 echo (
     p = "Number of visitors: "
-        span{"color":"red"} = fmt.Sprint(i\)
+        span{"color":"red"} = fmt.Sprint(i)
 )
 ```
