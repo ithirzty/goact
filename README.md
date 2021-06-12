@@ -40,11 +40,12 @@ i++
 echo(
     html
         head
-    body
-        div#content
-            h1 = "It works!"
-        footer
-            p{"style":"color:red"} = "Visitors: "+strconv.Itoa(i)
+	
+    	body
+            div#content
+                h1 = "It works!"
+            footer
+                p{"style":"color:red"} = "Visitors: "+strconv.Itoa(i)
 )
 }
 ```
