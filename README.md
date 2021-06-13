@@ -94,4 +94,5 @@ echo (
 
 ## What's new?
 
-<blockquote>Support for multiple attribute per element ``div.col.row#test``</blockquote>
+>Support for multiple attribute per element 
+``div.col.row#test``
