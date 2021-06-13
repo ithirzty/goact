@@ -80,19 +80,12 @@ Where not put in `"`, key and values can be go variables.
 ```golang
 element = "some text"+someVariable
 ```
-Will set the content of an element to the quoted text or the value of the passed variable.
-> Can I use functions?
-__Yes.__
-##### As such:
-```golang
-i++
-echo (
-    p = "Number of visitors: "
-        span{"color":"red"} = fmt.Sprint(i)
-)
-```
+Will set the content of an element to the quoted text or the value of the passed code (variable/function).
 
 ## What's new?
+
+>Added support for use of functions
+``span.number = strconv.Itoa(i)``
 
 >Support for multiple attribute per element 
 ``div.col.row#test``
