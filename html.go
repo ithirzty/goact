@@ -68,7 +68,6 @@ func parseHTML(content string) string {
 	}
 
 	code := currentWriterName + ".Write([]byte(`" + marshalElems(elems, baseIndent) + "`))\n"
-
 	return code
 }
 
@@ -91,103 +90,107 @@ func parseElem(l string) element {
 	i := 0
 	elem.Attrs = map[string]string{}
 	//getting elem name
-	for ; unicode.IsLetter(rune(l[i])) || unicode.IsNumber(rune(l[i])); i++ {
+	for ; unicode.IsLetter(rune(l[i])) || unicode.IsNumber(rune(l[i])) || rune(l[i]) == '-' || rune(l[i]) == '_'; i++ {
 		elem.Name += string(l[i])
 	}
-	if l[i] == '.' {
-		//assing class
-		i++
-		for ; unicode.IsLetter(rune(l[i])) || unicode.IsNumber(rune(l[i])); i++ {
-			elem.Attrs["\"class\""] += string(l[i])
-		}
-		elem.Attrs["\"class\""] = "\"" + elem.Attrs["\"class\""] + "\""
-	} else if l[i] == '#' {
-		//assign id
-		i++
-		for ; unicode.IsLetter(rune(l[i])) || unicode.IsNumber(rune(l[i])); i++ {
-			elem.Attrs["\"id\""] += string(l[i])
-		}
-		elem.Attrs["\"id\""] = "\"" + elem.Attrs["\"id\""] + "\""
-	} else if l[i] == '{' {
-		//assign multiple attributes
-		i++
 
-		//get json data
-		isString := false
-		isEscaped := false
-		memory := []rune{}
-		nbBraces := 1
-
-		for _, c := range l[i:] {
-
-			//escaping char
-			if isEscaped {
-				memory = append(memory, c)
-				isEscaped = false
-				continue
+	for i < len(l) {
+		if l[i] == '.' {
+			//assing class
+			i++
+			for ; unicode.IsLetter(rune(l[i])) || unicode.IsNumber(rune(l[i])) || rune(l[i]) == '-' || rune(l[i]) == '_'; i++ {
+				elem.Attrs["\"class\""] += string(l[i])
 			}
-
-			//need to escape following char
-			if c == '\\' {
-				memory = append(memory, c)
-				isEscaped = true
-				continue
+			elem.Attrs["\"class\""] += " "
+		} else if l[i] == '#' {
+			//assign id
+			i++
+			for ; unicode.IsLetter(rune(l[i])) || unicode.IsNumber(rune(l[i])) || rune(l[i]) == '-' || rune(l[i]) == '_'; i++ {
+				elem.Attrs["\"id\""] += string(l[i])
 			}
+		} else if l[i] == '{' {
+			//assign multiple attributes
+			i++
 
-			//current token is a string
-			if isString {
-				if c == '"' {
-					isString = false
+			//get json data
+			isString := false
+			isEscaped := false
+			memory := []rune{}
+			nbBraces := 1
+
+			for _, c := range l[i:] {
+
+				//escaping char
+				if isEscaped {
+					memory = append(memory, c)
+					isEscaped = false
+					continue
+				}
+
+				//need to escape following char
+				if c == '\\' {
+					memory = append(memory, c)
+					isEscaped = true
+					continue
+				}
+
+				//current token is a string
+				if isString {
+					if c == '"' {
+						isString = false
+						memory = append(memory, c)
+						continue
+					}
 					memory = append(memory, c)
 					continue
 				}
+
+				//current token is not yet a string
+				if c == '"' {
+					memory = append(memory, c)
+					isString = true
+					continue
+				}
+
+				//is end of json
+				if c == '{' {
+					nbBraces++
+				} else if c == '}' {
+					nbBraces--
+				}
+				if nbBraces == 0 {
+					break
+				}
+
+				//add all remaining chars
 				memory = append(memory, c)
-				continue
+
 			}
 
-			//current token is not yet a string
-			if c == '"' {
-				memory = append(memory, c)
-				isString = true
-				continue
+			//parse json to attricutes
+
+			jsonAttrs := parseJson(memory)
+			for k, v := range jsonAttrs {
+				elem.Attrs[k] = v
 			}
 
-			//is end of json
-			if c == '{' {
-				nbBraces++
-			} else if c == '}' {
-				nbBraces--
-			}
-			if nbBraces == 0 {
-				break
-			}
-
-			//add all remaining chars
-			memory = append(memory, c)
-
-		}
-
-		//parse json to attricutes
-
-		elem.Attrs = parseJson(memory)
-
-	}
-
-	//getting after the equal sign
-	if len(l) > i+2 {
-		found := true
-		for len(l) > i && l[i] != '=' {
-			if len(l) == i+1 {
-				found = false
-			}
+		} else if l[i] == '=' {
+			i++
+			break
+		} else {
 			i++
 		}
-		if found {
-			for _, c := range l[i+2:] {
-				elem.Content += string(c)
-			}
-		}
+
 	}
+	//getting after the equal sign
+	for i < len(l) {
+		elem.Content += string(l[i])
+		i++
+	}
+
+	elem.Attrs["\"class\""] = "\"" + elem.Attrs["\"class\""] + "\""
+	elem.Attrs["\"id\""] = "\"" + elem.Attrs["\"id\""] + "\""
+
 	elem.Content = strings.TrimSpace(elem.Content)
 
 	return elem

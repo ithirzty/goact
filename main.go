@@ -28,11 +28,11 @@ func main() {
 		if !strings.HasSuffix(f.Name(), ".go") {
 			continue
 		}
-
 		content, _ := ioutil.ReadFile(f.Name())
 		newFile := handleFile(string(content))
 
 		tmpGOXfiles = append(tmpGOXfiles, f.Name())
+		os.Create("TMPGOX_" + f.Name())
 		ioutil.WriteFile("TMPGOX_"+f.Name(), []byte(newFile), os.FileMode(os.O_CREATE))
 		os.Rename(f.Name(), f.Name()+"x")
 	}
