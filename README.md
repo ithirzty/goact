@@ -91,3 +91,7 @@ echo (
         span{"color":"red"} = fmt.Sprint(i)
 )
 ```
+
+## What's new?
+
+<blockquote>Support for multiple attribute per element ``div.col.row#test``</blockquote>
