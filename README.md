@@ -84,8 +84,12 @@ Will set the content of an element to the quoted text or the value of the passed
 
 ## What's new?
 
+### v1.0
+
 >Added support for use of functions
 ``span.number = strconv.Itoa(i)``
+
+### v1.1
 
 >Support for multiple attribute per element 
 ``div.col.row#test``
