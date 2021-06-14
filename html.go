@@ -67,7 +67,7 @@ func parseHTML(content string) string {
 
 	}
 
-	code := currentWriterName + ".Write([]byte(`" + marshalElems(elems, baseIndent) + "`))\n"
+	code := "\n" + currentWriterName + ".Write([]byte(`" + marshalElems(elems, baseIndent) + "`))\n"
 	return code
 }
 
@@ -94,8 +94,12 @@ func parseElem(l string) element {
 		elem.Name += string(l[i])
 	}
 
+	isClassSet := false
+	isIdSet := false
+
 	for i < len(l) {
 		if l[i] == '.' {
+			isClassSet = true
 			//assing class
 			i++
 			for ; unicode.IsLetter(rune(l[i])) || unicode.IsNumber(rune(l[i])) || rune(l[i]) == '-' || rune(l[i]) == '_'; i++ {
@@ -103,6 +107,7 @@ func parseElem(l string) element {
 			}
 			elem.Attrs["\"class\""] += " "
 		} else if l[i] == '#' {
+			isIdSet = true
 			//assign id
 			i++
 			for ; unicode.IsLetter(rune(l[i])) || unicode.IsNumber(rune(l[i])) || rune(l[i]) == '-' || rune(l[i]) == '_'; i++ {
@@ -118,8 +123,8 @@ func parseElem(l string) element {
 			memory := []rune{}
 			nbBraces := 1
 
-			for _, c := range l[i:] {
-
+			for ; i < len(l); i++ {
+				c := rune(l[i])
 				//escaping char
 				if isEscaped {
 					memory = append(memory, c)
@@ -168,9 +173,14 @@ func parseElem(l string) element {
 			}
 
 			//parse json to attricutes
-
 			jsonAttrs := parseJson(memory)
 			for k, v := range jsonAttrs {
+				if isClassSet && k == "\"class\"" {
+					continue
+				}
+				if isIdSet && k == "\"id\"" {
+					continue
+				}
 				elem.Attrs[k] = v
 			}
 
@@ -187,10 +197,12 @@ func parseElem(l string) element {
 		elem.Content += string(l[i])
 		i++
 	}
-
-	elem.Attrs["\"class\""] = "\"" + elem.Attrs["\"class\""] + "\""
-	elem.Attrs["\"id\""] = "\"" + elem.Attrs["\"id\""] + "\""
-
+	if isClassSet {
+		elem.Attrs["\"class\""] = "\"" + elem.Attrs["\"class\""] + "\""
+	}
+	if isIdSet {
+		elem.Attrs["\"id\""] = "\"" + elem.Attrs["\"id\""] + "\""
+	}
 	elem.Content = strings.TrimSpace(elem.Content)
 
 	return elem
@@ -276,7 +288,7 @@ func parseJson(content []rune) map[string]string {
 				fmt.Println("Missing value for key '" + key + "'")
 				os.Exit(1)
 			} else {
-				attrs[key] = val
+				attrs[strings.TrimSpace(key)] = val
 				key = ""
 				val = ""
 				isKey = true
@@ -292,7 +304,7 @@ func parseJson(content []rune) map[string]string {
 		}
 
 	}
-	attrs[key] = val
+	attrs[strings.TrimSpace(key)] = val
 
 	return attrs
 }

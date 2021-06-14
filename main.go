@@ -1,10 +1,12 @@
 package main
 
 import (
+	"flag"
 	"io/ioutil"
 	"os"
 	"os/exec"
 	"regexp"
+	"runtime"
 	"strings"
 )
 
@@ -22,6 +24,11 @@ var (
 var currentWriterName string = ""
 
 func main() {
+
+	deleteFlag := flag.Bool("delete", false, "Do not delete tmp files.")
+
+	flag.Parse()
+
 	files, _ := ioutil.ReadDir("./")
 	tmpGOXfiles := []string{}
 	for _, f := range files {
@@ -32,7 +39,9 @@ func main() {
 		newFile := handleFile(string(content))
 
 		tmpGOXfiles = append(tmpGOXfiles, f.Name())
-		os.Create("TMPGOX_" + f.Name())
+		if runtime.GOOS != "windows" {
+			os.Create("TMPGOX_" + f.Name())
+		}
 		ioutil.WriteFile("TMPGOX_"+f.Name(), []byte(newFile), os.FileMode(os.O_CREATE))
 		os.Rename(f.Name(), f.Name()+"x")
 	}
@@ -44,7 +53,9 @@ func main() {
 
 	for _, n := range tmpGOXfiles {
 		os.Rename(n+"x", n)
-		os.Remove("TMPGOX_" + n)
+		if *deleteFlag != true {
+			os.Remove("TMPGOX_" + n)
+		}
 	}
 
 }
