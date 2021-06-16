@@ -4,6 +4,7 @@ Goact is a better way of pushing html to the client.
 ## How to use it
 
 Execute the binary inside your project folder.
+
 Linux
 ```bash
 ./goact
@@ -12,6 +13,18 @@ Windows
 ```cmd
 .\goact.exe
 ```
+
+Or run it in test mode
+
+Linux
+```bash
+./goact -test
+```
+Windows
+```cmd
+.\goact.exe -test
+```
+This will detect file changes, recompile and run the binary.
 ### The go compiler needs to be installed.
 
 
