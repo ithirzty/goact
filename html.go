@@ -173,7 +173,7 @@ func parseElem(l string) element {
 			}
 
 			//parse json to attricutes
-			jsonAttrs := parseJson(memory)
+			jsonAttrs := pareJSON(memory)
 			for k, v := range jsonAttrs {
 				if isClassSet && k == "\"class\"" {
 					continue
@@ -208,7 +208,7 @@ func parseElem(l string) element {
 	return elem
 }
 
-func parseJson(content []rune) map[string]string {
+func pareJSON(content []rune) map[string]string {
 	attrs := map[string]string{}
 
 	isString := false
