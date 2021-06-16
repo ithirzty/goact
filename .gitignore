@@ -1,4 +1,4 @@
-*.bat
+compile.bat
 *.exe
 linux_amd64
 windows_amd64.exe
