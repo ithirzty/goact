@@ -2,12 +2,15 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"io/ioutil"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"regexp"
 	"runtime"
 	"strings"
+	"time"
 )
 
 type token struct {
@@ -23,41 +26,122 @@ var (
 
 var currentWriterName string = ""
 
+var (
+	//flags of current running mode
+	deleteFlag *bool
+	testFlag   *bool
+
+	//keep state of file for recompiling in test mode
+	fileModifs = map[string]string{}
+
+	//verbose progress
+	progressLongest = 0
+	lastFileName    = ""
+
+	//binary handler for test mode
+	binaryCmd *exec.Cmd
+)
+
 func main() {
 
-	deleteFlag := flag.Bool("delete", false, "Do not delete tmp files.")
-
+	deleteFlag = flag.Bool("delete", false, "Do not delete tmp files.")
+	testFlag = flag.Bool("test", false, "Run binary in test mode.")
 	flag.Parse()
 
+	if *testFlag {
+		handleDir()
+		dir, _ := os.Getwd()
+		parent := filepath.Base(dir)
+		if runtime.GOOS == "windows" {
+			binaryCmd = exec.Command(`.\` + parent + ".exe")
+		} else {
+			binaryCmd = exec.Command(`./` + parent)
+		}
+		go func() {
+			err := binaryCmd.Start()
+			if err != nil {
+				panic(err)
+			}
+		}()
+		for {
+
+			time.Sleep(time.Second * 1)
+			changed := false
+			newFileModifs := map[string]time.Time{}
+
+			files, _ := ioutil.ReadDir("./")
+			for _, f := range files {
+				if !strings.HasSuffix(f.Name(), ".go") {
+					continue
+				}
+				if fileModifs[f.Name()] != f.ModTime().String() {
+					fmt.Println("Edited:", f.Name())
+					changed = true
+				}
+				newFileModifs[f.Name()] = f.ModTime()
+			}
+			if changed {
+				handleDir()
+				binaryCmd.Process.Kill()
+				dir, _ := os.Getwd()
+				parent := filepath.Base(dir)
+				if runtime.GOOS == "windows" {
+					binaryCmd = exec.Command(`.\` + parent + ".exe")
+				} else {
+					binaryCmd = exec.Command(`./` + parent)
+				}
+				go func() {
+					err := binaryCmd.Start()
+					if err != nil {
+						panic(err)
+					}
+				}()
+			}
+
+		}
+	} else {
+		handleDir()
+	}
+
+}
+
+func handleDir() {
 	files, _ := ioutil.ReadDir("./")
-	tmpGOXfiles := []string{}
+	tmpGOXfiles := []os.FileInfo{}
 	for _, f := range files {
 		if !strings.HasSuffix(f.Name(), ".go") {
 			continue
 		}
+
 		content, _ := ioutil.ReadFile(f.Name())
+		lastFileName = f.Name()
 		newFile := handleFile(string(content))
 
-		tmpGOXfiles = append(tmpGOXfiles, f.Name())
+		tmpGOXfiles = append(tmpGOXfiles, f)
 		if runtime.GOOS != "windows" {
 			os.Create("TMPGOX_" + f.Name())
 		}
 		ioutil.WriteFile("TMPGOX_"+f.Name(), []byte(newFile), os.FileMode(os.O_CREATE))
 		os.Rename(f.Name(), f.Name()+"x")
+		fmt.Print("\n")
 	}
 
 	cmd := exec.Command("go", "build", ".")
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
-	cmd.Run()
+	cmd.Start()
+	cmd.Wait()
 
-	for _, n := range tmpGOXfiles {
-		os.Rename(n+"x", n)
-		if *deleteFlag != true {
-			os.Remove("TMPGOX_" + n)
+	for _, f := range tmpGOXfiles {
+		os.Rename(f.Name()+"x", f.Name())
+		if *deleteFlag == false {
+			os.Remove("TMPGOX_" + f.Name())
+		}
+		if *testFlag {
+			fileModifs[f.Name()] = f.ModTime().String()
 		}
 	}
-
+	fmt.Println("Done")
 }
 
 func handleFile(content string) string {
@@ -154,7 +238,8 @@ func handleFile(content string) string {
 
 func parse(tokens []token) string {
 	code := ""
-	for _, t := range tokens {
+	for i, t := range tokens {
+		progress(lastFileName, 10*i+1/len(tokens))
 		switch t.Type {
 		case CODE:
 			code += parseCode(t.Content)
@@ -187,4 +272,23 @@ func parseCode(content string) string {
 	}
 
 	return strings.Join(lines, "\n")
+}
+
+func progress(name string, step int) {
+	p := name + " ["
+	for i := 0; i <= 10; i++ {
+		if i > step {
+			p += "--"
+		} else {
+			p += "**"
+		}
+	}
+	p += "]" + " "
+	for i := 0; i <= progressLongest; i++ {
+		if i > len(p) {
+			p += " "
+		}
+	}
+	progressLongest = len(p)
+	fmt.Print("\r" + p)
 }
