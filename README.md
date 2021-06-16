@@ -3,7 +3,7 @@ Goact is a better way of pushing html to the client.
 
 ## How to use it
 
-Execute the binary inside your project folder.
+#### Execute the binary inside your project folder.
 
 Linux
 ```bash
@@ -14,7 +14,7 @@ Windows
 .\goact.exe
 ```
 
-Or run it in test mode
+#### Or run it in test mode
 
 Linux
 ```bash
