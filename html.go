@@ -45,7 +45,7 @@ func parseHTML(content string) string {
 		elems = append(elems, parseElem(l))
 		tmpElement := elems[len(elems)-1]
 
-		//is a child
+		// Is a child
 		if tmpElement.Indent > lastElement.Indent {
 			lastElement.Children = append(lastElement.Children, tmpElement.Id)
 			tmpElement.Parent = lastElement.Id
@@ -89,7 +89,7 @@ func parseElem(l string) element {
 	l += "\n"
 	i := 0
 	elem.Attrs = map[string]string{}
-	//getting elem name
+	// Get the name of the element
 	for ; unicode.IsLetter(rune(l[i])) || unicode.IsNumber(rune(l[i])) || rune(l[i]) == '-' || rune(l[i]) == '_'; i++ {
 		elem.Name += string(l[i])
 	}
@@ -100,7 +100,7 @@ func parseElem(l string) element {
 	for i < len(l) {
 		if l[i] == '.' {
 			isClassSet = true
-			//assing class
+			// Assign class
 			i++
 			for ; unicode.IsLetter(rune(l[i])) || unicode.IsNumber(rune(l[i])) || rune(l[i]) == '-' || rune(l[i]) == '_'; i++ {
 				elem.Attrs["\"class\""] += string(l[i])
@@ -108,16 +108,16 @@ func parseElem(l string) element {
 			elem.Attrs["\"class\""] += " "
 		} else if l[i] == '#' {
 			isIdSet = true
-			//assign id
+			// Assign ID
 			i++
 			for ; unicode.IsLetter(rune(l[i])) || unicode.IsNumber(rune(l[i])) || rune(l[i]) == '-' || rune(l[i]) == '_'; i++ {
 				elem.Attrs["\"id\""] += string(l[i])
 			}
 		} else if l[i] == '{' {
-			//assign multiple attributes
+			// Assing multiple attributes
 			i++
 
-			//get json data
+			// Get data from the JSON
 			isString := false
 			isEscaped := false
 			memory := []rune{}
@@ -125,21 +125,21 @@ func parseElem(l string) element {
 
 			for ; i < len(l); i++ {
 				c := rune(l[i])
-				//escaping char
+				// Escaping char
 				if isEscaped {
 					memory = append(memory, c)
 					isEscaped = false
 					continue
 				}
 
-				//need to escape following char
+				// Need to escape following chnar
 				if c == '\\' {
 					memory = append(memory, c)
 					isEscaped = true
 					continue
 				}
 
-				//current token is a string
+				// Current token is a string
 				if isString {
 					if c == '"' {
 						isString = false
@@ -150,14 +150,14 @@ func parseElem(l string) element {
 					continue
 				}
 
-				//current token is not yet a string
+				// Current token is not yet a string
 				if c == '"' {
 					memory = append(memory, c)
 					isString = true
 					continue
 				}
 
-				//is end of json
+				// Current token is the end of json
 				if c == '{' {
 					nbBraces++
 				} else if c == '}' {
@@ -167,13 +167,12 @@ func parseElem(l string) element {
 					break
 				}
 
-				//add all remaining chars
+				// Add all of the remaining characters
 				memory = append(memory, c)
-
 			}
 
-			//parse json to attricutes
-			jsonAttrs := pareJSON(memory)
+			// Parse attributes from the JSON
+			jsonAttrs := parseJSON(memory)
 			for k, v := range jsonAttrs {
 				if isClassSet && k == "\"class\"" {
 					continue
@@ -192,7 +191,7 @@ func parseElem(l string) element {
 		}
 
 	}
-	//getting after the equal sign
+	// Get the attributes after the = sign
 	for i < len(l) {
 		elem.Content += string(l[i])
 		i++
@@ -208,7 +207,7 @@ func parseElem(l string) element {
 	return elem
 }
 
-func pareJSON(content []rune) map[string]string {
+func parseJSON(content []rune) map[string]string {
 	attrs := map[string]string{}
 
 	isString := false
@@ -219,7 +218,7 @@ func pareJSON(content []rune) map[string]string {
 
 	for _, c := range content {
 
-		//escaping char
+		// Escaping char
 		if isEscaped {
 			if isKey {
 				key += string(c)
@@ -230,7 +229,7 @@ func pareJSON(content []rune) map[string]string {
 			continue
 		}
 
-		//need to escape following char
+		// Need to escape following char
 		if c == '\\' {
 			if isKey {
 				key += string(c)
@@ -241,7 +240,7 @@ func pareJSON(content []rune) map[string]string {
 			continue
 		}
 
-		//current token is a string
+		// Current token is a string
 		if isString {
 			if c == '"' {
 				isString = false
@@ -260,7 +259,7 @@ func pareJSON(content []rune) map[string]string {
 			continue
 		}
 
-		//current token is not yet a string
+		// Current token is not yet a string
 		if c == '"' {
 			if isKey {
 				key += string(c)
@@ -271,7 +270,7 @@ func pareJSON(content []rune) map[string]string {
 			continue
 		}
 
-		//expecting value after key
+		// Expecting value after a key
 		if c == ':' {
 			if isKey {
 				isKey = false
@@ -282,7 +281,7 @@ func pareJSON(content []rune) map[string]string {
 			continue
 		}
 
-		//getting to the next pair
+		// Getting to the next pair
 		if c == ',' {
 			if isKey {
 				fmt.Println("Missing value for key '" + key + "'")
@@ -296,7 +295,7 @@ func pareJSON(content []rune) map[string]string {
 			continue
 		}
 
-		//adding all other chars
+		// Adding all other chars
 		if isKey {
 			key += string(c)
 		} else {
