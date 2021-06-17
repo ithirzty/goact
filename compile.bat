@@ -2,7 +2,7 @@ go build -o "C:/Windows/goact.exe" .
 
 set GOARCH=amd64
 set GOOS=linux
-go build -o "linux_amd64" .
+go build -o "build/linux_amd64" .
 
 @REM set GOARCH=amd64
 @REM set GOOS=darwin
@@ -12,4 +12,4 @@ go build -o "linux_amd64" .
 
 set GOARCH=amd64
 set GOOS=windows
-go build -o "windows_amd64.exe" .
+go build -o "build/windows_amd64.exe" .
